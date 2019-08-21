@@ -5,10 +5,14 @@
 const { ApolloGateway } = require('@apollo/gateway');
 const { ApolloServer } = require('apollo-server');
 const { server: serverProduct } = require('./server-product');
+const { server: serverNode } = require('./server-node');
 
 const BASE_PORT = 7000;
 
-const SERVERS = [{ name: '📦 product', server: serverProduct }];
+const SERVERS = [
+  { name: '📦 product', server: serverProduct },
+  { name: '🌝 node', server: serverNode },
+];
 
 async function startServers() {
   const res = SERVERS.map(async ({ server, name }, index) => {
