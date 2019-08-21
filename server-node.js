@@ -17,6 +17,10 @@ const typeDefs = gql`
   extend type Product implements Node @key(fields: "id") {
     id: ID! @external
   }
+
+  extend type Review implements Node @key(fields: "id") {
+    id: ID! @external
+  }
 `;
 
 const resolvers = {

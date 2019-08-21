@@ -6,11 +6,13 @@ const { ApolloGateway } = require('@apollo/gateway');
 const { ApolloServer } = require('apollo-server');
 const { server: serverProduct } = require('./server-product');
 const { server: serverNode } = require('./server-node');
+const { server: serverReview } = require('./server-review');
 
 const BASE_PORT = 7000;
 
 const SERVERS = [
   { name: '📦 product', server: serverProduct },
+  { name: '🆒 review', server: serverReview },
   { name: '🌝 node', server: serverNode },
 ];
 
