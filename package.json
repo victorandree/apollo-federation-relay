@@ -4,6 +4,7 @@
   "author": "Victor Andrée <hello@victorandree.se>",
   "private": true,
   "repository": "victorandree/apollo-federation-relay",
+  "license": "MIT",
   "dependencies": {
     "@apollo/federation": "^0.8.0",
     "@apollo/gateway": "^0.9.0",
