@@ -4,18 +4,19 @@
 
 const { ApolloServer, gql } = require('apollo-server');
 const { buildFederatedSchema } = require('@apollo/federation');
+const { toRecords } = require('./util');
 const GraphQLNode = require('./graphql-node');
 
-const productId = (key) => GraphQLNode.toId('Product', key);
+const { toId } = GraphQLNode;
 
-const PRODUCTS = {
-  [productId('1')]: {
-    id: productId('1'),
+const PRODUCTS = [
+  {
+    id: toId('Product', '1'),
     name: 'My little product',
   },
-};
+];
 
-const ALL_PRODUCTS = Object.values(PRODUCTS);
+const PRODUCTS_MAP = toRecords(PRODUCTS);
 
 const typeDefs = gql`
   type Query {
@@ -32,21 +33,21 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     product(_, { id }) {
-      return PRODUCTS[id];
+      return PRODUCTS_MAP[id];
     },
 
     products(_, { ids }) {
       if (!ids) {
-        return ALL_PRODUCTS;
+        return PRODUCTS;
       }
 
-      return ids.map(id => PRODUCTS[id] || null);
-    }
+      return ids.map(id => PRODUCTS_MAP[id] || null);
+    },
   },
 
   Product: {
     __resolveReference(product) {
-      return PRODUCTS[product.id];
+      return PRODUCTS_MAP[product.id];
     },
   },
 };
