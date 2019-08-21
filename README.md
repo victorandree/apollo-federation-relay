@@ -28,6 +28,28 @@ query {
 }
 ```
 
+You can also query for reviews, which can review any node supported by the review service:
+
+```graphql
+query {
+  reviews {
+    id
+    body
+    rating
+    node {
+      __typename
+      id
+      ... on Product {
+        name
+        reviews {
+          rating
+        }
+      }
+    }
+  }
+}
+```
+
 ## TODO
 
 - [ ] Automatically generate schema for Node resolution service in gateway
