@@ -1,6 +1,6 @@
 {
   "name": "apollo-federation-relay",
-  "description": "A repository to try using GraphQL Relay conventions with Apollo Federation",
+  "description": "Combining Apollo Federation with Relay server specifications",
   "author": "Victor Andrée <hello@victorandree.se>",
   "private": true,
   "repository": "victorandree/apollo-federation-relay",
