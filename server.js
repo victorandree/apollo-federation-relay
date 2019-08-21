@@ -2,10 +2,9 @@
  * Gateway server and main entrypoint
  */
 
-const { ApolloGateway } = require('@apollo/gateway');
+ const { NodeGateway} = require('./node-gateway')
 const { ApolloServer } = require('apollo-server');
 const { server: serverProduct } = require('./server-product');
-const { server: serverNode } = require('./server-node');
 const { server: serverReview } = require('./server-review');
 
 const BASE_PORT = 7000;
@@ -13,7 +12,6 @@ const BASE_PORT = 7000;
 const SERVERS = [
   { name: '📦 product', server: serverProduct },
   { name: '🆒 review', server: serverReview },
-  { name: '🌝 node', server: serverNode },
 ];
 
 async function startServers() {
@@ -30,7 +28,7 @@ async function startServers() {
 
 async function main() {
   const serviceList = await startServers();
-  const gateway = new ApolloGateway({ serviceList });
+  const gateway = new NodeGateway({ serviceList });
   const server = new ApolloServer({ gateway, subscriptions: false });
   const info = await server.listen(BASE_PORT);
 

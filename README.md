@@ -4,7 +4,7 @@
 
 ## Support
 
-- [x] [Relay Global Object Identification]: Only at the gateway level. Having `node` root fields in each service would collide upon gatewayification (also see TODO)
+- [x] [Relay Global Object Identification]: Only at the gateway level (see TODO)
 - [x] [Relay Input Object Mutations]: Not affected by Federation
 - [ ] [Relay Cursor Connections]: Not supported until Apollo Federation supports value types (because of `PageInfo`)
 
@@ -52,8 +52,9 @@ query {
 
 ## TODO
 
-- [ ] Automatically generate schema for Node resolution service in gateway
-- [ ] Run Node resolution service locally in gateway
+- [x] Automatically generate schema for Node resolution service in gateway
+- [x] Run Node resolution service locally in gateway
+- [ ] Support `query { node }` in each service
 
 [Relay Global Object Identification]: https://relay.dev/graphql/objectidentification.htm
 [Relay Cursor Connections]: https://relay.dev/graphql/connections.htm
