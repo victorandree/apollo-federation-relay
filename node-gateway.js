@@ -20,20 +20,28 @@ const toTypeDefs = name =>
     }
   `;
 
-const RootModule = {
-  typeDefs: gql`
+class RootModule {
+  constructor(nodeTypes) {
+    this.resolvers = {
+      Query: {
+        node(_, { id }) {
+          const [typename] = GraphQLNode.fromId(id);
+          if (!nodeTypes.includes(typename)) {
+            throw new Error(`Invalid node ID "${id}"`);
+          }
+
+          return { id };
+        },
+      },
+    };
+  }
+
+  typeDefs = gql`
     type Query {
       node(id: ID!): Node
     }
-  `,
-  resolvers: {
-    Query: {
-      node(_, { id }) {
-        return { id };
-      },
-    },
-  },
-};
+  `
+}
 
 /**
  * An ApolloGateway which provides `Node` resolution across all federated
@@ -56,6 +64,7 @@ class NodeGateway extends ApolloGateway {
           }
 
           modules.push({ typeDefs: toTypeDefs(name) });
+          seenNodeTypes.add(name);
         },
       });
     }
@@ -67,7 +76,7 @@ class NodeGateway extends ApolloGateway {
     // Dynamically create, introspect and add a sync Node resolution service
     const nodeSchema = buildFederatedSchema([
       GraphQLNode,
-      RootModule,
+      new RootModule(Array.from(seenNodeTypes)),
       ...modules,
     ]);
 
