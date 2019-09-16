@@ -6,7 +6,7 @@
 
 - [x] [Relay Global Object Identification]: Only at the gateway level (see TODO)
 - [x] [Relay Input Object Mutations]: Not affected by Federation
-- [ ] [Relay Cursor Connections]: Not supported until Apollo Federation supports value types (because of `PageInfo`)
+- [x] [Relay Cursor Connections]
 
 ## Quick start
 
@@ -42,7 +42,11 @@ query {
       ... on Product {
         name
         reviews {
-          rating
+          edges {
+            node {
+              rating
+            }
+          }
         }
       }
     }

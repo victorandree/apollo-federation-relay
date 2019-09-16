@@ -6,6 +6,7 @@ const { ApolloServer, gql } = require('apollo-server');
 const { buildFederatedSchema } = require('@apollo/federation');
 const { toRecords } = require('./util');
 const GraphQLNode = require('./graphql-node');
+const { connectionFromArray } = require('graphql-relay');
 
 const { toId } = GraphQLNode;
 
@@ -13,6 +14,16 @@ const PRODUCTS = [
   {
     id: toId('Product', '1'),
     name: 'My little product',
+    related: [toId('Product', '2'), toId('Product', '3')],
+  },
+  {
+    id: toId('Product', '2'),
+    name: 'My other product',
+    related: [toId('Product', '1')],
+  },
+  {
+    id: toId('Product', '3'),
+    name: 'My third product',
   },
 ];
 
@@ -27,6 +38,29 @@ const typeDefs = gql`
   type Product implements Node @key(fields: "id") {
     id: ID!
     name: String!
+    related(
+      after: String
+      first: Int
+      before: String
+      last: Int
+    ): ProductConnection
+  }
+
+  type ProductConnection {
+    pageInfo: PageInfo!
+    edges: [ProductEdge]
+  }
+
+  type ProductEdge {
+    node: Product
+    cursor: String!
+  }
+
+  type PageInfo {
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+    startCursor: String
+    endCursor: String
   }
 `;
 
@@ -46,6 +80,11 @@ const resolvers = {
   },
 
   Product: {
+    related({ related }, args) {
+      const data = related ? related.map(id => PRODUCTS_MAP[id]) : [];
+      return connectionFromArray(data, args);
+    },
+
     __resolveReference(product) {
       return PRODUCTS_MAP[product.id];
     },
