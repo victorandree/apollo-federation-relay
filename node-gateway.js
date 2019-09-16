@@ -1,6 +1,5 @@
 const {
   ApolloGateway,
-  RemoteGraphQLDataSource,
   LocalGraphQLDataSource,
 } = require('@apollo/gateway');
 const { gql } = require('apollo-server');
@@ -20,13 +19,20 @@ const toTypeDefs = name =>
     }
   `;
 
+/**
+ * A GraphQL module which enables global object look-up by translating a global
+ * ID to a concrete object with an ID.
+ */
 class RootModule {
+  /**
+   * @param {Set<string>} nodeTypes Supported typenames
+   */
   constructor(nodeTypes) {
     this.resolvers = {
       Query: {
         node(_, { id }) {
           const [typename] = GraphQLNode.fromId(id);
-          if (!nodeTypes.includes(typename)) {
+          if (!nodeTypes.has(typename)) {
             throw new Error(`Invalid node ID "${id}"`);
           }
 
@@ -40,7 +46,7 @@ class RootModule {
     type Query {
       node(id: ID!): Node
     }
-  `
+  `;
 }
 
 /**
@@ -51,10 +57,11 @@ class NodeGateway extends ApolloGateway {
   async loadServiceDefinitions(config) {
     const defs = await super.loadServiceDefinitions(config);
 
-    // Once all real service definitions have been loaded, we need to iterate
-    // over them to find the set of types that implement the `Node` interface
+    // Once all real service definitions have been loaded, we need to find all
+    // types that implement the Node interface. These must also become concrete
+    // types in the Node service, so we build a GraphQL module for each.
+    const modules = [];
     const seenNodeTypes = new Set();
-    let modules = [];
     for (const service of defs.serviceDefinitions) {
       visit(service.typeDefs, {
         ObjectTypeDefinition(node) {
@@ -63,6 +70,8 @@ class NodeGateway extends ApolloGateway {
             return;
           }
 
+          // We don't need any resolvers for these modules; they're just
+          // simple objects with a single `id` property.
           modules.push({ typeDefs: toTypeDefs(name) });
           seenNodeTypes.add(name);
         },
@@ -73,13 +82,24 @@ class NodeGateway extends ApolloGateway {
       return defs;
     }
 
-    // Dynamically create, introspect and add a sync Node resolution service
+    // Dynamically construct a service to do Node resolution. This requires
+    // building a federated schema, and introspecting it using the
+    // `_service.sdl` field so that all the machinery is correct. Effectively
+    // this is what would have happened if this were a real service.
     const nodeSchema = buildFederatedSchema([
+      // The Node service must include the Node interface and a module for
+      // translating the IDs into concrete types
       GraphQLNode,
-      new RootModule(Array.from(seenNodeTypes)),
+      new RootModule(seenNodeTypes),
+
+      // The Node service must also have concrete types for each type. This
+      // just requires the a type definition with an `id` field for each
       ...modules,
     ]);
 
+    // This is a local schema, but we treat it as if it were a remote schema,
+    // because all other schemas are (probably) remote. In that case, we need
+    // to provide the Federated SDL as part of the type definitions.
     const res = graphqlSync({
       schema: nodeSchema,
       source: 'query { _service { sdl } }',
@@ -94,30 +114,16 @@ class NodeGateway extends ApolloGateway {
     return defs;
   }
 
-  // We override this function to get around a hard check for `services[].url`,
-  // otherwise we could've just provided `buildService`
-  createServices(services) {
-    for (const serviceDef of services) {
-      if (serviceDef.schema) {
-        this.serviceMap[serviceDef.name] = new LocalGraphQLDataSource(
-          serviceDef.schema,
-        );
-
-        continue;
-      }
-
-      if (!serviceDef.url) {
-        throw new Error(
-          `Service definition for service ${serviceDef.name} is missing a url`,
-        );
-      }
-
-      this.serviceMap[serviceDef.name] = this.config.buildService
-        ? this.config.buildService(serviceDef)
-        : new RemoteGraphQLDataSource({
-            url: serviceDef.url,
-          });
+  /**
+   * Override `createDataSource` to support local Node resolution service.
+   */
+  createDataSource(serviceDef) {
+    // Special case for the local Node resolution service
+    if (serviceDef.schema) {
+      return new LocalGraphQLDataSource(serviceDef.schema);
     }
+
+    return super.createDataSource(serviceDef);
   }
 }
 
