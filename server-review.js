@@ -6,6 +6,7 @@ const { ApolloServer, gql } = require('apollo-server');
 const { buildFederatedSchema } = require('@apollo/federation');
 const { toRecords } = require('./util');
 const GraphQLNode = require('./graphql-node');
+const { connectionFromArray } = require('graphql-relay');
 
 const { toId } = GraphQLNode;
 
@@ -14,6 +15,18 @@ const REVIEWS = [
     id: toId('Review', '1'),
     body: `It's OK!`,
     rating: 5,
+    node: { id: toId('Product', '1') },
+  },
+  {
+    id: toId('Review', '2'),
+    body: `It's pretty good!`,
+    rating: 2,
+    node: { id: toId('Product', '1') },
+  },
+  {
+    id: toId('Review', '3'),
+    body: `It's really bad`,
+    rating: 1,
     node: { id: toId('Product', '1') },
   },
 ];
@@ -35,7 +48,29 @@ const typeDefs = gql`
 
   extend type Product implements Node @key(fields: "id") {
     id: ID! @external
-    reviews: [Review!]!
+    reviews(
+      after: String
+      first: Int
+      before: String
+      last: Int
+    ): ReviewConnection
+  }
+
+  type ReviewConnection {
+    pageInfo: PageInfo!
+    edges: [ReviewEdge]
+  }
+
+  type ReviewEdge {
+    node: Review
+    cursor: String!
+  }
+
+  type PageInfo {
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+    startCursor: String
+    endCursor: String
   }
 `;
 
@@ -61,8 +96,9 @@ const resolvers = {
   },
 
   Product: {
-    reviews(product) {
-      return REVIEWS.filter(({ node }) => node && node.id === product.id);
+    reviews(product, args) {
+      const data = REVIEWS.filter(({ node }) => node && node.id === product.id);
+      return connectionFromArray(data, args);
     },
   },
 };
