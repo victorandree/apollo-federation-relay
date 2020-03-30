@@ -123,7 +123,7 @@ class NodeGateway extends ApolloGateway {
       const dataSource = new LocalGraphQLDataSource(serviceDef.schema);
 
       // Cache the created DataSource
-      this.serviceMap[serviceDef.name] = dataSource;
+      this.serviceMap[serviceDef.name] = { dataSource };
 
       return dataSource
     }
