@@ -5,8 +5,11 @@
 ## Support
 
 - [x] [Relay Global Object Identification]: Only at the gateway level (see TODO)
-- [x] [Relay Input Object Mutations]: Not affected by Federation
 - [x] [Relay Cursor Connections]
+
+[Relay Input Object Mutations] are no longer a required part of Relay,
+and the linked specification appears to have been removed.
+It was never affected by Apollo Federation.
 
 ## Quick start
 
