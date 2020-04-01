@@ -63,6 +63,22 @@ class NodeGateway extends ApolloGateway {
     const modules = [];
     const seenNodeTypes = new Set();
     for (const service of defs.serviceDefinitions) {
+      // Remove existing `query { node }` from service
+      service.typeDefs = visit(service.typeDefs, {
+        ObjectTypeDefinition(node) {
+          const name = node.name.value;
+          if (name === "Query"){
+            return visit(node, {
+              FieldDefinition(node) {
+                const name = node.name.value
+                if (name === "node") {
+                  return null
+                }
+              }
+            })
+          }
+        }
+      })
       visit(service.typeDefs, {
         ObjectTypeDefinition(node) {
           const name = node.name.value;
