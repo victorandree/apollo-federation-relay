@@ -58,7 +58,7 @@ query {
 
 - [x] Automatically generate schema for Node resolution service in gateway
 - [x] Run Node resolution service locally in gateway
-- [ ] Support `query { node }` in each service
+- [x] Support `query { node }` in each service
 
 [Relay Global Object Identification]: https://relay.dev/graphql/objectidentification.htm
 [Relay Cursor Connections]: https://relay.dev/graphql/connections.htm
