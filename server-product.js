@@ -31,6 +31,7 @@ const PRODUCTS_MAP = toRecords(PRODUCTS);
 
 const typeDefs = gql`
   type Query {
+    node(id: ID!): Node
     product(id: ID!): Product
     products(ids: [ID!]): [Product]
   }
@@ -64,8 +65,19 @@ const typeDefs = gql`
   }
 `;
 
+const nodeTypes = new Set(['Product']);
+
 const resolvers = {
   Query: {
+    node(_, { id }) {
+      const [typename] = GraphQLNode.fromId(id);
+      if (!nodeTypes.has(typename)) {
+        throw new Error(`Invalid node ID "${id}"`);
+      }
+
+      return PRODUCTS_MAP[id];
+    },
+
     product(_, { id }) {
       return PRODUCTS_MAP[id];
     },

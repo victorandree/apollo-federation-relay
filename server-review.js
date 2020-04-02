@@ -35,6 +35,7 @@ const REVIEWS_MAP = toRecords(REVIEWS);
 
 const typeDefs = gql`
   type Query {
+    node(id: ID!): Node
     review(id: ID!): Review
     reviews(ids: [ID!]): [Review]
   }
@@ -74,8 +75,18 @@ const typeDefs = gql`
   }
 `;
 
+const nodeTypes = new Set(['Review']);
+
 const resolvers = {
   Query: {
+    node(_, { id }) {
+      const [typename] = GraphQLNode.fromId(id);
+      if (!nodeTypes.has(typename)) {
+        throw new Error(`Invalid node ID "${id}"`);
+      }
+
+      return REVIEWS_MAP[id];
+    },
     review(_, { id }) {
       return REVIEWS_MAP[id];
     },

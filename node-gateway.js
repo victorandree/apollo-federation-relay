@@ -1,7 +1,4 @@
-const {
-  ApolloGateway,
-  LocalGraphQLDataSource,
-} = require('@apollo/gateway');
+const { ApolloGateway, LocalGraphQLDataSource } = require('@apollo/gateway');
 const { gql } = require('apollo-server');
 const { parse, visit, graphqlSync } = require('graphql');
 const { buildFederatedSchema } = require('@apollo/federation');
@@ -63,17 +60,31 @@ class NodeGateway extends ApolloGateway {
     const modules = [];
     const seenNodeTypes = new Set();
     for (const service of defs.serviceDefinitions) {
-      visit(service.typeDefs, {
+      // Manipulate the typeDefs of the service
+      service.typeDefs = visit(service.typeDefs, {
         ObjectTypeDefinition(node) {
           const name = node.name.value;
-          if (!isNode(node) || seenNodeTypes.has(name)) {
-            return;
+
+          // Remove existing `query { node }` from service to avoid collisions
+          if (name === 'Query') {
+            return visit(node, {
+              FieldDefinition(node) {
+                if (node.name.value === 'node') {
+                  return null;
+                }
+              },
+            });
           }
 
-          // We don't need any resolvers for these modules; they're just
-          // simple objects with a single `id` property.
-          modules.push({ typeDefs: toTypeDefs(name) });
-          seenNodeTypes.add(name);
+          // Add any new Nodes from this service to the Node service's modules
+          if (isNode(node) && !seenNodeTypes.has(name)) {
+            // We don't need any resolvers for these modules; they're just
+            // simple objects with a single `id` property.
+            modules.push({ typeDefs: toTypeDefs(name) });
+            seenNodeTypes.add(name);
+
+            return;
+          }
         },
       });
     }
@@ -125,7 +136,7 @@ class NodeGateway extends ApolloGateway {
       // Cache the created DataSource
       this.serviceMap[serviceDef.name] = { dataSource };
 
-      return dataSource
+      return dataSource;
     }
 
     return super.createAndCacheDataSource(serviceDef);
