@@ -1,7 +1,4 @@
-const {
-  ApolloGateway,
-  LocalGraphQLDataSource,
-} = require('@apollo/gateway');
+const { ApolloGateway, LocalGraphQLDataSource } = require('@apollo/gateway');
 const { gql } = require('apollo-server');
 const { parse, visit, graphqlSync } = require('graphql');
 const { buildFederatedSchema } = require('@apollo/federation');
@@ -67,18 +64,18 @@ class NodeGateway extends ApolloGateway {
       service.typeDefs = visit(service.typeDefs, {
         ObjectTypeDefinition(node) {
           const name = node.name.value;
-          if (name === "Query"){
+          if (name === 'Query') {
             return visit(node, {
               FieldDefinition(node) {
-                const name = node.name.value
-                if (name === "node") {
-                  return null
+                const name = node.name.value;
+                if (name === 'node') {
+                  return null;
                 }
-              }
-            })
+              },
+            });
           }
-        }
-      })
+        },
+      });
       visit(service.typeDefs, {
         ObjectTypeDefinition(node) {
           const name = node.name.value;
