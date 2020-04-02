@@ -65,26 +65,25 @@ class NodeGateway extends ApolloGateway {
         ObjectTypeDefinition(node) {
           const name = node.name.value;
 
-          // Remove existing `query { node }` from service
+          // Remove existing `query { node }` from service to avoid collisions
           if (name === 'Query') {
             return visit(node, {
               FieldDefinition(node) {
-                const name = node.name.value;
-                if (name === 'node') {
+                if (node.name.value === 'node') {
                   return null;
                 }
               },
             });
           }
 
-          // Find the the types that implement the Node interface
-          if (!isNode(node) || seenNodeTypes.has(name)) {
-            return;
-          } else {
+          // Add any new Nodes from this service to the Node service's modules
+          if (isNode(node) && !seenNodeTypes.has(name)) {
             // We don't need any resolvers for these modules; they're just
             // simple objects with a single `id` property.
             modules.push({ typeDefs: toTypeDefs(name) });
             seenNodeTypes.add(name);
+
+            return;
           }
         },
       });
