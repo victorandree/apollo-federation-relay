@@ -60,10 +60,12 @@ class NodeGateway extends ApolloGateway {
     const modules = [];
     const seenNodeTypes = new Set();
     for (const service of defs.serviceDefinitions) {
-      // Remove existing `query { node }` from service
+      // Manipulate the typeDefs of the service
       service.typeDefs = visit(service.typeDefs, {
         ObjectTypeDefinition(node) {
           const name = node.name.value;
+
+          // Remove existing `query { node }` from service
           if (name === 'Query') {
             return visit(node, {
               FieldDefinition(node) {
@@ -74,19 +76,16 @@ class NodeGateway extends ApolloGateway {
               },
             });
           }
-        },
-      });
-      visit(service.typeDefs, {
-        ObjectTypeDefinition(node) {
-          const name = node.name.value;
+
+          // Find the the types that implement the Node interface
           if (!isNode(node) || seenNodeTypes.has(name)) {
             return;
+          } else {
+            // We don't need any resolvers for these modules; they're just
+            // simple objects with a single `id` property.
+            modules.push({ typeDefs: toTypeDefs(name) });
+            seenNodeTypes.add(name);
           }
-
-          // We don't need any resolvers for these modules; they're just
-          // simple objects with a single `id` property.
-          modules.push({ typeDefs: toTypeDefs(name) });
-          seenNodeTypes.add(name);
         },
       });
     }
