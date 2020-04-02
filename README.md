@@ -4,7 +4,7 @@
 
 ## Support
 
-- [x] [Relay Global Object Identification]: Only at the gateway level (see TODO)
+- [x] [Relay Global Object Identification]
 - [x] [Relay Cursor Connections]
 
 [Relay Input Object Mutations] are no longer a required part of Relay,
