@@ -138,7 +138,7 @@ class NodeGateway extends ApolloGateway {
       // Cache the created DataSource
       this.serviceMap[serviceDef.name] = { dataSource };
 
-      return dataSource
+      return dataSource;
     }
 
     return super.createAndCacheDataSource(serviceDef);
