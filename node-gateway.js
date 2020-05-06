@@ -126,20 +126,14 @@ class NodeGateway extends ApolloGateway {
   }
 
   /**
-   * Override `createAndCacheDataSource` to support local Node resolution service.
+   * Override `createDataSource` to let the local Node resolution service be
+   * created without complaining about missing a URL.
    */
-  createAndCacheDataSource(serviceDef) {
-    // Special case for the local Node resolution service
+  createDataSource(serviceDef) {
     if (serviceDef.schema) {
-      const dataSource = new LocalGraphQLDataSource(serviceDef.schema);
-
-      // Cache the created DataSource
-      this.serviceMap[serviceDef.name] = { dataSource };
-
-      return dataSource;
+      return new LocalGraphQLDataSource(serviceDef.schema);
     }
-
-    return super.createAndCacheDataSource(serviceDef);
+    return super.createDataSource(serviceDef);
   }
 }
 
