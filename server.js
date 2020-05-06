@@ -2,7 +2,7 @@
  * Gateway server and main entrypoint
  */
 
- const { NodeGateway} = require('./node-gateway')
+const { NodeGateway } = require('./node-gateway');
 const { ApolloServer } = require('apollo-server');
 const { server: serverProduct } = require('./server-product');
 const { server: serverReview } = require('./server-review');
@@ -28,7 +28,7 @@ async function startServers() {
 
 async function main() {
   const serviceList = await startServers();
-  const gateway = new NodeGateway({ serviceList });
+  const gateway = new NodeGateway({ serviceList, serviceHealthCheck: true });
   const server = new ApolloServer({ gateway, subscriptions: false });
   const info = await server.listen(BASE_PORT);
 
