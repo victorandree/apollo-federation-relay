@@ -2,7 +2,7 @@
  * Gateway server and main entrypoint
  */
 
- const { NodeGateway} = require('./node-gateway')
+const { NodeGateway } = require('./node-gateway');
 const { ApolloServer } = require('apollo-server');
 const { server: serverProduct } = require('./server-product');
 const { server: serverReview } = require('./server-review');
