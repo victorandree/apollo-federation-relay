@@ -2,6 +2,13 @@
 
 > Combining Apollo Federation with Relay server specifications
 
+## Compatibility warning
+
+> With `@apollo/gateway@0.34.0`, Apollo has changed how it manages federated schemas.
+> This project has not been updated to handle these changes.
+>
+> PRs are welcome to support `@apollo/gateway >= 0.34.0`.
+
 ## Support
 
 - [x] [Relay Global Object Identification]
