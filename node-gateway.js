@@ -1,7 +1,7 @@
 const { ApolloGateway, LocalGraphQLDataSource } = require('@apollo/gateway');
 const { gql } = require('apollo-server');
 const { parse, visit, graphqlSync } = require('graphql');
-const { buildFederatedSchema } = require('@apollo/federation');
+const { buildSubgraphSchema } = require('@apollo/federation');
 const GraphQLNode = require('./graphql-node');
 
 const NODE_SERVICE_NAME = 'NODE_SERVICE';
@@ -97,7 +97,7 @@ class NodeGateway extends ApolloGateway {
     // building a federated schema, and introspecting it using the
     // `_service.sdl` field so that all the machinery is correct. Effectively
     // this is what would have happened if this were a real service.
-    const nodeSchema = buildFederatedSchema([
+    const nodeSchema = buildSubgraphSchema([
       // The Node service must include the Node interface and a module for
       // translating the IDs into concrete types
       GraphQLNode,

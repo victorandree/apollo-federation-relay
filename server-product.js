@@ -3,7 +3,7 @@
  */
 
 const { ApolloServer, gql } = require('apollo-server');
-const { buildFederatedSchema } = require('@apollo/federation');
+const { buildSubgraphSchema } = require('@apollo/federation');
 const { toRecords } = require('./util');
 const GraphQLNode = require('./graphql-node');
 const { connectionFromArray } = require('graphql-relay');
@@ -104,5 +104,5 @@ const resolvers = {
 };
 
 exports.server = new ApolloServer({
-  schema: buildFederatedSchema([{ typeDefs, resolvers }, GraphQLNode]),
+  schema: buildSubgraphSchema([{ typeDefs, resolvers }, GraphQLNode]),
 });

@@ -1,14 +1,16 @@
 {
   "name": "apollo-federation-relay",
+  "version": "0.0.1",
   "description": "Combining Apollo Federation with Relay server specifications",
   "author": "Victor Andrée <hello@victorandree.se>",
   "private": true,
   "repository": "victorandree/apollo-federation-relay",
   "license": "MIT",
   "dependencies": {
-    "@apollo/federation": "^0.29.0",
-    "@apollo/gateway": "^0.33.0",
-    "apollo-server": "^2.25.1",
-    "graphql-relay": "^0.8.0"
+    "@apollo/federation": "0.35.1",
+    "@apollo/gateway": "2.0.0-alpha.5",
+    "apollo-server": "3.6.3",
+    "graphql": "16.3.0",
+    "graphql-relay": "^0.10.0"
   }
 }
