@@ -107,7 +107,7 @@ class NodeCompose extends IntrospectAndCompose {
     // building a federated schema, and introspecting it using the
     // `_service.sdl` field so that all the machinery is correct. Effectively
     // this is what would have happened if this were a real service.
-    const nodeSchema = buildSubgraphSchema([
+    this.nodeSchema = buildSubgraphSchema([
       // The Node service must include the Node interface and a module for
       // translating the IDs into concrete types
       GraphQLNode,
@@ -121,16 +121,14 @@ class NodeCompose extends IntrospectAndCompose {
     // This is a local schema, but we treat it as if it were a remote schema,
     // because all other schemas are (probably) remote. In that case, we need
     // to provide the Federated SDL as part of the type definitions.
-    const res = graphqlSync({
-      schema: nodeSchema,
+    const typeDefs = parse(graphqlSync({
+      schema: this.nodeSchema,
       source: 'query { _service { sdl } }',
-    });
-
-    this.nodeSchema = nodeSchema;
+    }).data._service.sdl);
 
     return super.createSupergraphFromSubgraphList([...subgraphs, {
-      typeDefs: parse(res.data._service.sdl),
       name: NODE_SERVICE_NAME,
+      typeDefs,
     }]);
   }
 
