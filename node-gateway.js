@@ -138,8 +138,9 @@ class NodeGateway extends ApolloGateway {
    * created without complaining about missing a URL.
    */
   createDataSource(serviceDef) {
-    if (serviceDef.name === NODE_SERVICE_NAME) {
-      return this.config.supergraphSdl.createNodeDataSource();
+    const { supergraphSdl } = this.config
+    if (serviceDef.name === NODE_SERVICE_NAME && supergraphSdl instanceof NodeCompose) {
+      return supergraphSdl.createNodeDataSource();
     }
     return super.createDataSource(serviceDef);
   }

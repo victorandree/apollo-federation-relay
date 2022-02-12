@@ -28,10 +28,10 @@ async function startServers() {
 
 async function main() {
   const subgraphs = await startServers();
-  const supergraphSdl = new NodeCompose({
-    subgraphs,
-  })
-  const gateway = new NodeGateway({ supergraphSdl, serviceHealthCheck: true });
+  const gateway = new NodeGateway({
+    supergraphSdl: new NodeCompose({ subgraphs }),
+    serviceHealthCheck: true,
+  });
   const server = new ApolloServer({ gateway, subscriptions: false });
   const info = await server.listen(BASE_PORT);
 
