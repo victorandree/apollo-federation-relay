@@ -91,6 +91,7 @@ type Query
   @join__type(graph: ___PRODUCT)
 {
   node(id: ID!): Node @join__field(graph: NODE_SERVICE)
+  nodes(ids: [ID!]!): [Node]! @join__field(graph: NODE_SERVICE)
   review(id: ID!): Review @join__field(graph: ___REVIEW)
   reviews(ids: [ID!]): [Review] @join__field(graph: ___REVIEW)
   product(id: ID!): Product @join__field(graph: ___PRODUCT)

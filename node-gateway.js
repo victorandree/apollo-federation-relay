@@ -40,6 +40,16 @@ class RootModule {
 
           return { id };
         },
+        nodes(_, { ids }) {
+          return ids.map(id => {
+            const [typename] = GraphQLNode.fromId(id);
+            if (!nodeTypes.has(typename)) {
+              throw new Error(`Invalid node ID "${id}"`);
+            }
+
+            return ({ id })
+          });
+        }
       },
     };
   }
@@ -47,6 +57,7 @@ class RootModule {
   typeDefs = gql`
     type Query {
       node(id: ID!): Node
+      nodes(ids: [ID!]!): [Node]!
     }
   `;
 }
@@ -68,7 +79,7 @@ class NodeCompose extends IntrospectAndCompose {
           if (name === 'Query') {
             return visit(node, {
               FieldDefinition(node) {
-                if (node.name.value === 'node') {
+                if (['node', 'nodes'].includes(node.name.value)) {
                   return null;
                 }
               },
