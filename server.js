@@ -7,7 +7,7 @@ const { ApolloServer } = require('apollo-server');
 const { server: serverProduct } = require('./server-product');
 const { server: serverReview } = require('./server-review');
 
-const BASE_PORT = 7000;
+const BASE_PORT = 8000;
 
 const SERVERS = [
   { name: '📦 product', server: serverProduct },
