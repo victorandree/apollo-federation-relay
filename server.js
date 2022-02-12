@@ -2,9 +2,8 @@
  * Gateway server and main entrypoint
  */
 const { ApolloServer } = require('apollo-server');
-const { IntrospectAndCompose } = require('@apollo/gateway')
 
-const { NodeGateway } = require('./node-gateway');
+const { NodeGateway, NodeCompose } = require('./node-gateway');
 const { server: serverProduct } = require('./server-product');
 const { server: serverReview } = require('./server-review');
 
@@ -29,7 +28,7 @@ async function startServers() {
 
 async function main() {
   const subgraphs = await startServers();
-  const supergraphSdl = new IntrospectAndCompose({
+  const supergraphSdl = new NodeCompose({
     subgraphs,
   })
   const gateway = new NodeGateway({ supergraphSdl, serviceHealthCheck: true });

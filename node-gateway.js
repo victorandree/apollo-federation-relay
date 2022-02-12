@@ -1,7 +1,12 @@
-const { ApolloGateway, LocalGraphQLDataSource } = require('@apollo/gateway');
+const {
+  ApolloGateway,
+  IntrospectAndCompose,
+  LocalGraphQLDataSource,
+} = require('@apollo/gateway');
 const { gql } = require('apollo-server');
 const { parse, visit, graphqlSync } = require('graphql');
 const { buildSubgraphSchema } = require('@apollo/federation');
+
 const GraphQLNode = require('./graphql-node');
 
 const NODE_SERVICE_NAME = 'NODE_SERVICE';
@@ -46,22 +51,16 @@ class RootModule {
   `;
 }
 
-/**
- * An ApolloGateway which provides `Node` resolution across all federated
- * services, and a global `node` field, like Relay.
- */
-class NodeGateway extends ApolloGateway {
-  async loadServiceDefinitions(config) {
-    const defs = await super.loadServiceDefinitions(config);
-
+class NodeCompose extends IntrospectAndCompose {
+  createSupergraphFromSubgraphList(subgraphs) {
     // Once all real service definitions have been loaded, we need to find all
     // types that implement the Node interface. These must also become concrete
     // types in the Node service, so we build a GraphQL module for each.
     const modules = [];
     const seenNodeTypes = new Set();
-    for (const service of defs.serviceDefinitions) {
-      // Manipulate the typeDefs of the service
-      service.typeDefs = visit(service.typeDefs, {
+
+    subgraphs.forEach(subgraph => {
+      subgraph.typeDefs = visit(subgraph.typeDefs, {
         ObjectTypeDefinition(node) {
           const name = node.name.value;
 
@@ -87,10 +86,10 @@ class NodeGateway extends ApolloGateway {
           }
         },
       });
-    }
+    })
 
     if (!modules.length) {
-      return defs;
+      return super.createSupergraphFromSubgraphList(subgraphs);
     }
 
     // Dynamically construct a service to do Node resolution. This requires
@@ -116,25 +115,35 @@ class NodeGateway extends ApolloGateway {
       source: 'query { _service { sdl } }',
     });
 
-    defs.serviceDefinitions.push({
-      typeDefs: parse(res.data._service.sdl),
-      schema: nodeSchema,
-      name: NODE_SERVICE_NAME,
-    });
+    this.nodeSchema = nodeSchema;
 
-    return defs;
+    return super.createSupergraphFromSubgraphList([...subgraphs, {
+      typeDefs: parse(res.data._service.sdl),
+      name: NODE_SERVICE_NAME,
+    }]);
   }
 
+  createNodeDataSource() {
+    return new LocalGraphQLDataSource(this.nodeSchema);
+  }
+}
+
+/**
+ * An ApolloGateway which provides `Node` resolution across all federated
+ * services, and a global `node` field, like Relay.
+ */
+class NodeGateway extends ApolloGateway {
   /**
    * Override `createDataSource` to let the local Node resolution service be
    * created without complaining about missing a URL.
    */
   createDataSource(serviceDef) {
-    if (serviceDef.schema) {
-      return new LocalGraphQLDataSource(serviceDef.schema);
+    if (serviceDef.name === NODE_SERVICE_NAME) {
+      return this.config.supergraphSdl.createNodeDataSource();
     }
     return super.createDataSource(serviceDef);
   }
 }
 
+exports.NodeCompose = NodeCompose;
 exports.NodeGateway = NodeGateway;
