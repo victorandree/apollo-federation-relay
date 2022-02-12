@@ -1,10 +1,10 @@
 /**
  * Gateway server and main entrypoint
  */
-
-const { NodeGateway } = require('./node-gateway');
 const { ApolloServer } = require('apollo-server');
 const { IntrospectAndCompose } = require('@apollo/gateway')
+
+const { NodeGateway } = require('./node-gateway');
 const { server: serverProduct } = require('./server-product');
 const { server: serverReview } = require('./server-review');
 
@@ -18,10 +18,10 @@ const SERVERS = [
 async function startServers() {
   const res = SERVERS.map(async ({ server, name }, index) => {
     const number = index + 1;
-    const info = await server.listen(BASE_PORT + number);
+    const { url } = await server.listen(BASE_PORT + number);
 
-    console.log(`${name} up at ${info.url}graphql`);
-    return { ...info, name, server };
+    console.log(`${name} up at ${url}graphql`);
+    return { name, url };
   });
 
   return await Promise.all(res);
