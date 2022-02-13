@@ -3,7 +3,6 @@
  */
 
 const { ApolloServer, gql } = require('apollo-server');
-const { ApolloServerPluginInlineTraceDisabled } = require('apollo-server-core');
 const { buildSubgraphSchema } = require('@apollo/federation');
 const { connectionFromArray } = require('graphql-relay');
 
@@ -108,5 +107,4 @@ const resolvers = {
 
 exports.server = new ApolloServer({
   schema: buildSubgraphSchema([{ typeDefs, resolvers }, GraphQLNode]),
-  plugins: [ApolloServerPluginInlineTraceDisabled()],
 });

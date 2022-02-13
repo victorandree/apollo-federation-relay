@@ -1,6 +1,5 @@
 {
   "name": "apollo-federation-relay",
-  "version": "0.0.1",
   "description": "Combining Apollo Federation with Relay server specifications",
   "author": "Victor Andrée <hello@victorandree.se>",
   "private": true,

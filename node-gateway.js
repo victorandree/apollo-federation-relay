@@ -40,16 +40,6 @@ class RootModule {
 
           return { id };
         },
-        nodes(_, { ids }) {
-          return ids.map(id => {
-            const [typename] = GraphQLNode.fromId(id);
-            if (!nodeTypes.has(typename)) {
-              throw new Error(`Invalid node ID "${id}"`);
-            }
-
-            return ({ id })
-          });
-        }
       },
     };
   }
@@ -57,7 +47,6 @@ class RootModule {
   typeDefs = gql`
     type Query {
       node(id: ID!): Node
-      nodes(ids: [ID!]!): [Node]!
     }
   `;
 }
@@ -70,7 +59,8 @@ class NodeCompose extends IntrospectAndCompose {
     const modules = [];
     const seenNodeTypes = new Set();
 
-    subgraphs.forEach(subgraph => {
+    for (const subgraph of subgraphs) {
+      // Manipulate the typeDefs of the service
       subgraph.typeDefs = visit(subgraph.typeDefs, {
         ObjectTypeDefinition(node) {
           const name = node.name.value;
@@ -79,7 +69,7 @@ class NodeCompose extends IntrospectAndCompose {
           if (name === 'Query') {
             return visit(node, {
               FieldDefinition(node) {
-                if (['node', 'nodes'].includes(node.name.value)) {
+                if (node.name.value === 'node') {
                   return null;
                 }
               },
@@ -97,7 +87,7 @@ class NodeCompose extends IntrospectAndCompose {
           }
         },
       });
-    })
+    }
 
     if (!modules.length) {
       return super.createSupergraphFromSubgraphList(subgraphs);
