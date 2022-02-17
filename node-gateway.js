@@ -1,7 +1,12 @@
-const { ApolloGateway, LocalGraphQLDataSource } = require('@apollo/gateway');
+const {
+  ApolloGateway,
+  IntrospectAndCompose,
+  LocalGraphQLDataSource,
+} = require('@apollo/gateway');
 const { gql } = require('apollo-server');
 const { parse, visit, graphqlSync } = require('graphql');
-const { buildFederatedSchema } = require('@apollo/federation');
+const { buildSubgraphSchema } = require('@apollo/federation');
+
 const GraphQLNode = require('./graphql-node');
 
 const NODE_SERVICE_NAME = 'NODE_SERVICE';
@@ -46,22 +51,17 @@ class RootModule {
   `;
 }
 
-/**
- * An ApolloGateway which provides `Node` resolution across all federated
- * services, and a global `node` field, like Relay.
- */
-class NodeGateway extends ApolloGateway {
-  async loadServiceDefinitions(config) {
-    const defs = await super.loadServiceDefinitions(config);
-
+class NodeCompose extends IntrospectAndCompose {
+  createSupergraphFromSubgraphList(subgraphs) {
     // Once all real service definitions have been loaded, we need to find all
     // types that implement the Node interface. These must also become concrete
     // types in the Node service, so we build a GraphQL module for each.
     const modules = [];
     const seenNodeTypes = new Set();
-    for (const service of defs.serviceDefinitions) {
+
+    for (const subgraph of subgraphs) {
       // Manipulate the typeDefs of the service
-      service.typeDefs = visit(service.typeDefs, {
+      subgraph.typeDefs = visit(subgraph.typeDefs, {
         ObjectTypeDefinition(node) {
           const name = node.name.value;
 
@@ -90,14 +90,14 @@ class NodeGateway extends ApolloGateway {
     }
 
     if (!modules.length) {
-      return defs;
+      return super.createSupergraphFromSubgraphList(subgraphs);
     }
 
     // Dynamically construct a service to do Node resolution. This requires
     // building a federated schema, and introspecting it using the
     // `_service.sdl` field so that all the machinery is correct. Effectively
     // this is what would have happened if this were a real service.
-    const nodeSchema = buildFederatedSchema([
+    this.nodeSchema = buildSubgraphSchema([
       // The Node service must include the Node interface and a module for
       // translating the IDs into concrete types
       GraphQLNode,
@@ -111,30 +111,39 @@ class NodeGateway extends ApolloGateway {
     // This is a local schema, but we treat it as if it were a remote schema,
     // because all other schemas are (probably) remote. In that case, we need
     // to provide the Federated SDL as part of the type definitions.
-    const res = graphqlSync({
-      schema: nodeSchema,
+    const typeDefs = parse(graphqlSync({
+      schema: this.nodeSchema,
       source: 'query { _service { sdl } }',
-    });
+    }).data._service.sdl);
 
-    defs.serviceDefinitions.push({
-      typeDefs: parse(res.data._service.sdl),
-      schema: nodeSchema,
+    return super.createSupergraphFromSubgraphList([...subgraphs, {
       name: NODE_SERVICE_NAME,
-    });
-
-    return defs;
+      typeDefs,
+    }]);
   }
 
+  createNodeDataSource() {
+    return new LocalGraphQLDataSource(this.nodeSchema);
+  }
+}
+
+/**
+ * An ApolloGateway which provides `Node` resolution across all federated
+ * services, and a global `node` field, like Relay.
+ */
+class NodeGateway extends ApolloGateway {
   /**
    * Override `createDataSource` to let the local Node resolution service be
    * created without complaining about missing a URL.
    */
   createDataSource(serviceDef) {
-    if (serviceDef.schema) {
-      return new LocalGraphQLDataSource(serviceDef.schema);
+    const { supergraphSdl } = this.config
+    if (serviceDef.name === NODE_SERVICE_NAME && supergraphSdl instanceof NodeCompose) {
+      return supergraphSdl.createNodeDataSource();
     }
     return super.createDataSource(serviceDef);
   }
 }
 
+exports.NodeCompose = NodeCompose;
 exports.NodeGateway = NodeGateway;
