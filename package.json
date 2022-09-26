@@ -6,10 +6,10 @@
   "repository": "victorandree/apollo-federation-relay",
   "license": "MIT",
   "dependencies": {
-    "@apollo/federation": "0.35.1",
-    "@apollo/gateway": "2.0.0-alpha.5",
-    "apollo-server": "3.6.3",
-    "graphql": "16.3.0",
+    "@apollo/federation": "^0.37.1",
+    "@apollo/gateway": "^2.1.3",
+    "apollo-server": "^3.10.2",
+    "graphql": "^16.6.0",
     "graphql-relay": "^0.10.0"
   }
 }
