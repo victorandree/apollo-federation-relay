@@ -1,7 +1,8 @@
 /**
  * Gateway server and main entrypoint
  */
-const { ApolloServer } = require('apollo-server');
+const { ApolloServer } = require('@apollo/server');
+const { startStandaloneServer } = require('@apollo/server/standalone');
 
 const { NodeGateway, NodeCompose } = require('./node-gateway');
 const { server: serverProduct } = require('./server-product');
@@ -10,16 +11,18 @@ const { server: serverReview } = require('./server-review');
 const BASE_PORT = 8000;
 
 const SERVERS = [
-  { name: '📦 product', server: serverProduct },
-  { name: '🆒 review', server: serverReview },
+  { name: 'product', label: '📦 product', server: serverProduct },
+  { name: 'review', label: '🆒 review', server: serverReview },
 ];
 
 async function startServers() {
-  const res = SERVERS.map(async ({ server, name }, index) => {
+  const res = SERVERS.map(async ({ server, name, label }, index) => {
     const number = index + 1;
-    const { url } = await server.listen(BASE_PORT + number);
+    const { url } = await startStandaloneServer(server, {
+      listen: { port: BASE_PORT + number },
+    });
 
-    console.log(`${name} up at ${url}graphql`);
+    console.log(`${label} up at ${url}`);
     return { name, url };
   });
 
@@ -32,10 +35,12 @@ async function main() {
     supergraphSdl: new NodeCompose({ subgraphs }),
     serviceHealthCheck: true,
   });
-  const server = new ApolloServer({ gateway, subscriptions: false });
-  const info = await server.listen(BASE_PORT);
+  const server = new ApolloServer({ gateway });
+  const info = await startStandaloneServer(server, {
+    listen: { port: BASE_PORT },
+  });
 
-  console.log(`\n--\n\n🌍 gateway up at ${info.url}graphql`);
+  console.log(`\n--\n\n🌍 gateway up at ${info.url}`);
 }
 
 main().catch(err => {

@@ -3,9 +3,9 @@ const {
   IntrospectAndCompose,
   LocalGraphQLDataSource,
 } = require('@apollo/gateway');
-const { gql } = require('apollo-server');
+const gql = require('graphql-tag');
 const { parse, visit, graphqlSync } = require('graphql');
-const { buildSubgraphSchema } = require('@apollo/federation');
+const { buildSubgraphSchema } = require('@apollo/subgraph');
 
 const GraphQLNode = require('./graphql-node');
 

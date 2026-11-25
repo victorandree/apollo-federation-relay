@@ -2,8 +2,9 @@
  * Review service
  */
 
-const { ApolloServer, gql } = require('apollo-server');
-const { buildSubgraphSchema } = require('@apollo/federation');
+const { ApolloServer } = require('@apollo/server');
+const gql = require('graphql-tag');
+const { buildSubgraphSchema } = require('@apollo/subgraph');
 const { connectionFromArray } = require('graphql-relay');
 
 const { toRecords } = require('./util');
